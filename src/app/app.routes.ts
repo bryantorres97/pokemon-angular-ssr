@@ -14,15 +14,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/pricing/pricing-page'),
   },
   {
-    path: '',
-    loadComponent: () => import('./pages/about/about-page'),
-  },
-  {
     path: '**',
     redirectTo: () => {
       console.log('redirecting to about');
       return 'about';
     },
-    pathMatch: 'full',
   },
 ];
