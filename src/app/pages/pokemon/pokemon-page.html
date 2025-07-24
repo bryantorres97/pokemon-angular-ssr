@@ -1,0 +1,105 @@
+@if (pokemon()) {
+<!-- Variable en el template -->
+@let myPokemon = pokemon()!;
+
+<div
+  class="max-w-4xl mx-auto bg-slate-800 rounded-2xl shadow-2xl overflow-hidden p-6 md:p-10 space-y-6 text-white"
+>
+  <!-- Nombre e Imagen -->
+  <div
+    class="flex flex-col md:flex-row md:items-center md:justify-between gap-6"
+  >
+    <div class="flex-1">
+      <h2 class="text-3xl md:text-4xl font-extrabold capitalize mb-2">
+        {{ myPokemon.name }}
+      </h2>
+      <!-- Tipos -->
+      <div class="flex flex-wrap gap-2 mt-2">
+        @for (type of myPokemon.types; track $index) {
+        <span
+          [class]="
+            'px-3 py-1 rounded-full text-white text-sm font-semibold ' +
+            getTypeColor(type.type.name)
+          "
+        >
+          {{ type.type.name }}
+        </span>
+        }
+      </div>
+      <!-- Grito -->
+      <div class="mt-4">
+        <button
+          (click)="playCry(myPokemon.cries.latest)"
+          class="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg shadow transition"
+        >
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+            <path
+              d="M9 4.804A1 1 0 0 0 7.553 4H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2.553A1 1 0 0 0 9 15.196V4.804zM13.707 5.293a1 1 0 0 0-1.414 1.414A5 5 0 0 1 14 10a5 5 0 0 1-1.707 3.293 1 1 0 0 0 1.414 1.414A7 7 0 0 0 16 10a7 7 0 0 0-2.293-5.293z"
+            />
+          </svg>
+          Escuchar grito
+        </button>
+      </div>
+    </div>
+    <div class="flex-shrink-0">
+      <img
+        [src]="myPokemon.sprites.other?.['official-artwork']?.front_default || ''"
+        alt="{{ myPokemon.name }}"
+        class="w-40 h-40 object-contain drop-shadow-lg"
+        loading="lazy"
+        width="160"
+        height="160"
+      />
+    </div>
+  </div>
+
+  <!-- Detalles generales -->
+  <div
+    class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-slate-300 border-t border-slate-600 pt-4"
+  >
+    <div>
+      <span class="block font-semibold text-slate-200">Altura</span>
+      {{ myPokemon.height / 10 }} m
+    </div>
+    <div>
+      <span class="block font-semibold text-slate-200">Peso</span>
+      {{ myPokemon.weight / 10 }} kg
+    </div>
+    <div class="col-span-2">
+      <span class="block font-semibold text-slate-200">Habilidades</span>
+      <ul class="list-disc list-inside">
+        @for (ability of myPokemon.abilities; track $index) {
+        <li>{{ ability.ability?.name || "Desconocida" }}</li>
+        }
+      </ul>
+    </div>
+  </div>
+
+  <!-- Estadísticas -->
+  <div class="border-t border-slate-600 pt-4">
+    <h3 class="text-lg font-semibold text-slate-200 mb-2">Estadísticas</h3>
+    <div class="space-y-3">
+      @for (stat of myPokemon.stats; track $index) {
+      <div>
+        <div class="flex justify-between text-sm text-slate-300 mb-1">
+          <span class="capitalize">{{ stat.stat.name }}</span>
+          <span>{{ stat.base_stat }}</span>
+        </div>
+        <div class="w-full bg-slate-700 rounded-full h-2">
+          <div
+            class="bg-blue-500 h-2 rounded-full transition-all duration-300"
+            [style.width.%]="stat.base_stat / 2"
+          ></div>
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+</div>
+}@else if (pokemon() === null) {
+<div class="max-w-4xl mx-auto p-6">
+  <h2 class="text-2xl font-bold text-center text-slate-200">
+    Cargando Pokémon...
+  </h2>
+</div>
+}

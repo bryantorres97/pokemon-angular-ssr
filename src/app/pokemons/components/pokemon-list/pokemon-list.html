@@ -1,0 +1,12 @@
+<div class="grid gap-3 grid-cols-1 sm:grid-cols-3 md:grid-cols-5">
+  @for (item of pokemons(); track $index) {
+  <app-pokemon-card [pokemon]="item"></app-pokemon-card>
+
+  }
+  <!-- TODO Si no hay resultados -->
+  <!-- <div
+    class="col-span-5 text-center text-white border-white h-28 flex justify-center items-center"
+  >
+    No se han encontrado Pókemons
+  </div> -->
+</div>
