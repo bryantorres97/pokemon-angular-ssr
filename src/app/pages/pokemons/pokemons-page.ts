@@ -3,18 +3,20 @@ import {
   ApplicationRef,
   ChangeDetectionStrategy,
   Component,
+  computed,
   inject,
+  input,
   OnDestroy,
   OnInit,
   signal,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
-import { PokemonList } from '../../pokemons/components/pokemon-list/pokemon-list';
+import { Title } from '@angular/platform-browser';
 import { PokemonListSkeletonComponent } from './ui/pokemon-list-skeleton/pokemon-list-skeleton.component';
+import { PokemonList } from '../../pokemons/components/pokemon-list/pokemon-list';
 import { PokemonsService } from '../../pokemons/services/pokemons.service';
 import { SimplePokemon } from '../../pokemons/interfaces';
-import { Title } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-pokemons-page',
@@ -24,9 +26,9 @@ import { Title } from '@angular/platform-browser';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export default class PokemonsPage implements OnInit, OnDestroy {
+  public id = input<string | undefined>();
   public isLoading = signal(true);
   private appRef = inject(ApplicationRef);
-  private route = inject(ActivatedRoute);
   private router = inject(Router);
   private pokemonsService = inject(PokemonsService);
   private title = inject(Title);
@@ -34,13 +36,11 @@ export default class PokemonsPage implements OnInit, OnDestroy {
   public pokemons = signal<SimplePokemon[]>([]);
   private appRef$: Subscription;
 
-  public currentPage = toSignal<number>(
-    this.route.queryParamMap.pipe(
-      map((params) => parseInt(params.get('page') || '1', 10)),
-      map((page) => (isNaN(page) || page < 1 ? 1 : page)),
-      startWith(1),
-    )
-  );
+  public currentPage = computed(() => {
+    const raw = this.id();
+    const parsed = parseInt(raw || '1', 10);
+    return isNaN(parsed) || parsed < 1 ? 1 : parsed;
+  });
 
   constructor() {
     console.log('PokemonsPage initialized');
@@ -50,8 +50,8 @@ export default class PokemonsPage implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-  console.log(this.currentPage());
-    this.loadPokemons(0);
+    console.log(this.currentPage());
+    this.loadPokemons(this.currentPage() -1);
     // setTimeout(() => {
     //   this.isLoading.set(false);
     // }, 3000);
@@ -65,26 +65,25 @@ export default class PokemonsPage implements OnInit, OnDestroy {
   }
 
   public loadPokemons(page: number = 0): void {
-    
     const pageToLoad = this.currentPage()! + page;
     console.log('Loading page:', pageToLoad);
-    this.pokemonsService.loadPage(pageToLoad)
-    .pipe(
-      tap(() => {
-        this.router.navigate([], {
-          queryParams: { page: pageToLoad },
-          queryParamsHandling: 'merge',
+    this.pokemonsService
+      .loadPage(pageToLoad)
+      .pipe(
+        tap(() => {
+          this.router.navigateByUrl(`/pokemons/${pageToLoad}`, {
+            skipLocationChange: true,
+          });
+          this.title.setTitle(`Pokémon - Page ${pageToLoad}`);
         })
-        this.title.setTitle(`Pokémon - Page ${pageToLoad}`);
-      })
-    )
-    .subscribe({
-      next: (pokemons) => {
-        this.pokemons.set(pokemons);
-      },
-      error: (error) => {
-        console.error('Error loading pokemons:', error);
-      },
-    });
+      )
+      .subscribe({
+        next: (pokemons) => {
+          this.pokemons.set(pokemons);
+        },
+        error: (error) => {
+          console.error('Error loading pokemons:', error);
+        },
+      });
   }
 }
