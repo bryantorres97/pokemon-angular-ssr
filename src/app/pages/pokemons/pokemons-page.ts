@@ -1,17 +1,16 @@
-import { map, startWith, Subscription, tap } from 'rxjs';
+import { Subscription, tap } from 'rxjs';
 import {
   ApplicationRef,
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   input,
   OnDestroy,
-  OnInit,
   signal,
 } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { RouterLink } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 import { PokemonListSkeletonComponent } from './ui/pokemon-list-skeleton/pokemon-list-skeleton.component';
 import { PokemonList } from '../../pokemons/components/pokemon-list/pokemon-list';
@@ -20,16 +19,15 @@ import { SimplePokemon } from '../../pokemons/interfaces';
 
 @Component({
   selector: 'app-pokemons-page',
-  imports: [PokemonList, PokemonListSkeletonComponent],
+  imports: [PokemonList, PokemonListSkeletonComponent, RouterLink],
   templateUrl: './pokemons-page.html',
   styles: ``,
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export default class PokemonsPage implements OnInit, OnDestroy {
+export default class PokemonsPage implements OnDestroy {
   public id = input<string | undefined>();
   public isLoading = signal(true);
   private appRef = inject(ApplicationRef);
-  private router = inject(Router);
   private pokemonsService = inject(PokemonsService);
   private title = inject(Title);
 
@@ -42,6 +40,10 @@ export default class PokemonsPage implements OnInit, OnDestroy {
     return isNaN(parsed) || parsed < 1 ? 1 : parsed;
   });
 
+  public loadOnPageChanged = effect(() => {
+    this.loadPokemons();
+  });
+
   constructor() {
     console.log('PokemonsPage initialized');
     this.appRef$ = this.appRef.isStable.subscribe((isStable) => {
@@ -49,32 +51,21 @@ export default class PokemonsPage implements OnInit, OnDestroy {
     });
   }
 
-  ngOnInit(): void {
-    console.log(this.currentPage());
-    this.loadPokemons(this.currentPage() -1);
-    // setTimeout(() => {
-    //   this.isLoading.set(false);
-    // }, 3000);
-  }
-
   ngOnDestroy(): void {
     if (this.appRef$) {
       this.appRef$.unsubscribe();
     }
+    this.pokemons.set([]);
+    this.loadOnPageChanged.destroy();
     console.log('PokemonsPage destroyed');
   }
 
-  public loadPokemons(page: number = 0): void {
-    const pageToLoad = this.currentPage()! + page;
-    console.log('Loading page:', pageToLoad);
+  public loadPokemons(): void {
     this.pokemonsService
-      .loadPage(pageToLoad)
+      .loadPage(this.currentPage())
       .pipe(
         tap(() => {
-          this.router.navigateByUrl(`/pokemons/${pageToLoad}`, {
-            skipLocationChange: true,
-          });
-          this.title.setTitle(`Pokémon - Page ${pageToLoad}`);
+          this.title.setTitle(`Pokémon - Página ${this.currentPage()}`);
         })
       )
       .subscribe({

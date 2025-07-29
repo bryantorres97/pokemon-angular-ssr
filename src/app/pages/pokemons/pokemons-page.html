@@ -4,7 +4,7 @@
 
 <hr class="my-2" />
 
-@if (pokemons()) {
+@if (pokemons().length > 0) {
 <app-pokemon-list [pokemons]="pokemons()"></app-pokemon-list>
 
 }@else{
@@ -15,13 +15,14 @@
 <!-- Botones de paginación -->
 <div class="flex justify-center mt-4">
   <button
-    (click)="loadPokemons(-1)"
+    [routerLink]="['/pokemons', currentPage() - 1]"
     class="bg-blue-500 text-white me-2 px-4 py-2 rounded"
+    [disabled]="currentPage() <= 1"
   >
     Anterior
   </button>
   <button
-    (click)="loadPokemons(1)"
+    [routerLink]="['/pokemons', currentPage() + 1]"
     class="bg-blue-500 text-white ms-2 px-4 py-2 rounded"
   >
     Siguiente
